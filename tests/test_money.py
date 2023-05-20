@@ -1,3 +1,5 @@
+from functools import reduce
+from operator import add, attrgetter
 import unittest
 
 from parameterized import parameterized
@@ -19,6 +21,17 @@ class Money:
             return False
         return self.amount == other.amount and self.currency == other.currency
 
+
+class Portfolio:
+    def __init__(self):
+        self.moneys = []
+
+    def add(self, *moneys):
+        self.moneys.extend(moneys)
+
+    def evaluate(self, currency):
+        total = reduce(add, map(attrgetter("amount"), self.moneys), 0)
+        return Money(total, currency)
 
 class TestMoney(unittest.TestCase):
     @parameterized.expand(
@@ -43,3 +56,13 @@ class TestMoney(unittest.TestCase):
     def test_division(self, _, initial: Money, divisor, expected):
         result = initial.divide(divisor)
         self.assertEqual(expected, result)
+
+class TestPortfolio(unittest.TestCase):
+    def test_addition(self):
+        fiveDollars = Money(5, "USD")
+        tenDollars = Money(10, "USD")
+        fifteenDollars = Money(15, "USD")
+        portfolio = Portfolio()
+        portfolio.add(fiveDollars, tenDollars)
+        self.assertEqual(fifteenDollars, portfolio.evaluate("USD"))
+
