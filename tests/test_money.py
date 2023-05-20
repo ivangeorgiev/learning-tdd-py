@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import unittest
 
 from parameterized import parameterized
@@ -30,6 +31,43 @@ class TestMoney(unittest.TestCase):
     def test_division(self, _, initial: Money, divisor, expected: Money):
         result = initial.divide(divisor)
         self.assertEqual(expected, result)
+
+    @parameterized.expand(
+        [("same_currency_and_amount", Money(10, "USD"), Money(10, "USD"))]
+    )
+    def test_equality(self, _, first: Money, second: Money):
+        self.assertEqual(first, second)
+
+    @parameterized.expand(
+        [
+            (
+                "five_dollars_should_be_not_equal_to_ten_dollars",
+                Money(5, "USD"),
+                Money(10, "USD"),
+            ),
+            (
+                "five_dollars_should_be_not_equal_to_five_euros",
+                Money(5, "USD"),
+                Money(5, "EUR"),
+            ),
+            (
+                "object_without_amount_should_be_not_equal_to_five_dollars",
+                SimpleNamespace(currency="USD"),
+                Money(5, "USD")
+            ),
+            (
+                "object_without_currency_should_be_not_equal_to_five_dollars",
+                SimpleNamespace(amount=5),
+                Money(5, "USD")
+            )
+        ]
+    )
+    def test_non_equality(self, _, first: Money, second: Money):
+        self.assertNotEqual(first, second)
+
+    def test_representation(self):
+        five_dollars = Money(5, "USD")
+        self.assertEqual("Money(5, 'USD')", repr(five_dollars))
 
 
 class TestPortfolio(unittest.TestCase):

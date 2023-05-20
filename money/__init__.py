@@ -18,7 +18,7 @@ class Money:
         return self.amount == other.amount and self.currency == other.currency
 
     def __repr__(self):
-        return f"{self.__class__}({self.amount}, '{self.currency}')"
+        return f"{self.__class__.__name__}({self.amount}, '{self.currency}')"
 
 class Portfolio:
     def __init__(self):
