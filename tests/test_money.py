@@ -68,7 +68,7 @@ class TestMoney(unittest.TestCase):
     def test_representation(self):
         five_dollars = Money(5, "USD")
         self.assertEqual("Money(5, 'USD')", repr(five_dollars))
-
+        self.assertEqual("Money(5, 'USD')", str(five_dollars))
 
 class TestPortfolio(unittest.TestCase):
     def test_addition(self):
