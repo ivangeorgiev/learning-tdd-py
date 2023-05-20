@@ -13,30 +13,33 @@ class Money:
     
     def divide(self, divisor):
         return Money(self.amount / divisor, self.currency)
+    
+    def __eq__(self, other):
+        if not all(hasattr(other, attr) for attr in ["currency", "amount"]):
+            return False
+        return self.amount == other.amount and self.currency == other.currency
 
 
 class TestMoney(unittest.TestCase):
     @parameterized.expand(
         [
-            ("five_times_two_should_be_ten", Money(5, "USD"), 2, 10),
-            ("ten_times_two_should_be_twenty", Money(10, "USD"), 2, 20),
-            ("five_times_three_should_be_fifteen", Money(5, "USD"), 3, 15),
-            ("five_euros_times_two_should_be_ten_euros", Money(5, "EUR"), 2, 10),
+            ("five_times_two_should_be_ten", Money(5, "USD"), 2, Money(10, "USD")),
+            ("ten_times_two_should_be_twenty", Money(10, "USD"), 2, Money(20, "USD")),
+            ("five_times_three_should_be_fifteen", Money(5, "USD"), 3, Money(15, "USD")),
+            ("five_euros_times_two_should_be_ten_euros", Money(5, "EUR"), 2, Money(10, "EUR")),
         ]
     )
-    def test_multiplication(self, _, initial: Money, multiplier, expected_amount):
+    def test_multiplication(self, _, initial: Money, multiplier, expected):
         result = initial.times(multiplier)
-        self.assertEqual(expected_amount, result.amount)
-        self.assertEqual(initial.currency, result.currency)
+        self.assertEqual(expected, result)
 
     @parameterized.expand(
         [
-            ("should divide korean wons", Money(4002, "KRW"), 4, 1000.5,),
-            ("should divide korean wons with different amount and divisor", Money(500, "KRW"), 2, 250,),
-            ("should devide euros", Money(200, "EUR"), 4, 50,),
+            ("should divide korean wons", Money(4002, "KRW"), 4, Money(1000.5, "KRW")),
+            ("should divide korean wons with different amount and divisor", Money(500, "KRW"), 2, Money(250, "KRW")),
+            ("should devide euros", Money(200, "EUR"), 4, Money(50, "EUR")),
         ]
     )
-    def test_division(self, _, initial: Money, divisor, expected_amount):
+    def test_division(self, _, initial: Money, divisor, expected):
         result = initial.divide(divisor)
-        self.assertEqual(expected_amount, result.amount)
-        self.assertEqual(initial.currency, result.currency)
+        self.assertEqual(expected, result)
