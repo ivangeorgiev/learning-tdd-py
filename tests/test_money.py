@@ -36,7 +36,7 @@ class TestMoney(unittest.TestCase):
             ("should devide euros", Money(200, "EUR"), 4, 50,),
         ]
     )
-    def test_devision(self, _, initial: Money, divisor, expected_amount):
+    def test_division(self, _, initial: Money, divisor, expected_amount):
         result = initial.divide(divisor)
         self.assertEqual(expected_amount, result.amount)
         self.assertEqual(initial.currency, result.currency)
