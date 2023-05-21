@@ -1,6 +1,9 @@
 from functools import reduce
 from operator import add, attrgetter
 
+class MissingExchangeRateError(Exception):
+    pass
+
 class Money:
     def __init__(self, amount, currency):
         self.amount = amount
@@ -32,9 +35,22 @@ class Portfolio:
         self.moneys.extend(moneys)
 
     def evaluate(self, currency):
-        total = reduce(add, map(lambda m: self.__convert(m, currency), self.moneys), 0)
+        total = reduce(add, self.__convert_all(self.moneys, currency), 0)
         return Money(total, currency)
 
+    def __convert_all(self, moneys, currency):
+        amounts = []
+        errors = []
+        for m in moneys:
+            try:
+                amounts.append(self.__convert(m, currency))
+            except KeyError as error:
+                errors.append(error.args[0])
+        if errors:
+            msg = f"Missing exchange rate(s): [{','.join(errors)}]"
+            raise MissingExchangeRateError(msg)
+        return amounts
+        
     def __convert(self, money, currency):
         if money.currency == currency:
             return money.amount
