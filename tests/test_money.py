@@ -115,3 +115,11 @@ class TestBank(unittest.TestCase):
         with self.assertRaisesRegex(MissingExchangeRateError, "EUR>Kalganid"):
             bank.convert(from_money, "Kalganid")
 
+    def test_conversion_with_changed_exchange_rate(self):
+        ten_euros = Money(10, "EUR")
+        bank = Bank()
+        bank.add_exchange_rate("EUR", "USD", 1.2)
+        self.assertEqual(Money(12, "USD"), bank.convert(ten_euros, "USD"))
+
+        bank.add_exchange_rate("EUR", "USD", 1.3)        
+        self.assertEqual(Money(13, "USD"), bank.convert(ten_euros, "USD"))
