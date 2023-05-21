@@ -21,6 +21,10 @@ class Money:
         return f"{self.__class__.__name__}({self.amount}, '{self.currency}')"
 
 class Portfolio:
+    _rates = {
+        "EUR>USD": 1.2,
+        "USD>KRW": 1100,
+    }
     def __init__(self):
         self.moneys = []
 
@@ -28,5 +32,12 @@ class Portfolio:
         self.moneys.extend(moneys)
 
     def evaluate(self, currency):
-        total = reduce(add, map(attrgetter("amount"), self.moneys), 0)
+        total = reduce(add, map(lambda m: self.__convert(m, currency), self.moneys), 0)
         return Money(total, currency)
+
+    def __convert(self, money, currency):
+        if money.currency == currency:
+            return money.amount
+        rate = self._rates[f"{money.currency}>{currency}"]
+        return money.amount * rate
+    

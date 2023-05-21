@@ -71,10 +71,30 @@ class TestMoney(unittest.TestCase):
         self.assertEqual("Money(5, 'USD')", str(five_dollars))
 
 class TestPortfolio(unittest.TestCase):
-    def test_addition(self):
-        fiveDollars = Money(5, "USD")
-        tenDollars = Money(10, "USD")
-        fifteenDollars = Money(15, "USD")
+    # def test_addition(self):
+    #     fiveDollars = Money(5, "USD")
+    #     tenDollars = Money(10, "USD")
+    #     fifteenDollars = Money(15, "USD")
+    #     portfolio = Portfolio()
+    #     portfolio.add(fiveDollars, tenDollars)
+        # self.assertEqual(fifteenDollars, portfolio.evaluate("USD"))
+
+    def test_addition_of_dollars_and_euros(self):
+        five_dollars = Money(5, "USD")
+        ten_euros = Money(10, "EUR")
         portfolio = Portfolio()
-        portfolio.add(fiveDollars, tenDollars)
-        self.assertEqual(fifteenDollars, portfolio.evaluate("USD"))
+        portfolio.add(five_dollars, ten_euros)
+        expected_money = Money(17, "USD")
+        actual_money = portfolio.evaluate("USD")
+        self.assertEqual(actual_money, expected_money)
+
+    @parameterized.expand([
+        ("same_currency_5_dollars_and_5_dollars_make_10_dollars", Money(5, "USD"), Money(5, "USD"), Money(10, "USD")),
+        ("mixed_currency_5_dollars_and_10_euros_make_17_dollars", Money(5, "USD"), Money(10, "EUR"), Money(17, "USD")),
+        ("mixed_currency_1_dollar_and_1100_korrean_wons_make_2200_korrean_wons", Money(1, "USD"), Money(1100, "KRW"), Money(2200, "KRW")),
+    ])
+    def test_addition(self, _, first: Money, second: Money, expected: Money):
+        portfolio = Portfolio()
+        portfolio.add(first, second)
+        actual_money= portfolio.evaluate(expected.currency)
+        self.assertEqual(expected, actual_money)
