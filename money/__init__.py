@@ -11,10 +11,10 @@ class Money:
 
     def times(self, multiplier):
         return Money(self.amount * multiplier, self.currency)
-    
+
     def divide(self, divisor):
         return Money(self.amount / divisor, self.currency)
-    
+
     def __eq__(self, other):
         if not all(hasattr(other, attr) for attr in ["currency", "amount"]):
             return False
@@ -24,36 +24,42 @@ class Money:
         return f"{self.__class__.__name__}({self.amount}, '{self.currency}')"
 
 class Portfolio:
-    _rates = {
-        "EUR>USD": 1.2,
-        "USD>KRW": 1100,
-    }
     def __init__(self):
         self.moneys = []
 
     def add(self, *moneys):
         self.moneys.extend(moneys)
 
-    def evaluate(self, currency):
-        total = reduce(add, self.__convert_all(self.moneys, currency), 0)
+    def evaluate(self, bank, currency):
+        total = reduce(add, self.__convert_all(bank, self.moneys, currency), 0)
         return Money(total, currency)
 
-    def __convert_all(self, moneys, currency):
+    def __convert_all(self, bank, moneys, currency):
         amounts = []
         errors = []
         for m in moneys:
             try:
-                amounts.append(self.__convert(m, currency))
-            except KeyError as error:
+                amounts.append(bank.convert(m, currency).amount)
+            except MissingExchangeRateError as error:
                 errors.append(error.args[0])
         if errors:
             msg = f"Missing exchange rate(s): [{','.join(errors)}]"
             raise MissingExchangeRateError(msg)
         return amounts
-        
-    def __convert(self, money, currency):
-        if money.currency == currency:
-            return money.amount
-        rate = self._rates[f"{money.currency}>{currency}"]
-        return money.amount * rate
+
+class Bank:
+    def __init__(self):
+        self._exchange_rates = {}
+
+    def add_exchange_rate(self, from_currency, to_currency, rate):
+        self._exchange_rates[f"{from_currency}>{to_currency}"] = rate
+
+    def convert(self, from_money: Money, to_currency) -> Money:
+        if from_money.currency == to_currency:
+            return Money(from_money.amount, to_currency)
+        exchange_key = f"{from_money.currency}>{to_currency}"
+        if exchange_key in self._exchange_rates:
+            rate = self._exchange_rates[exchange_key]
+            return Money(from_money.amount*rate, to_currency)
+        raise MissingExchangeRateError(exchange_key)
     

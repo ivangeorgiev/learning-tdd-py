@@ -3,7 +3,7 @@ import unittest
 
 from parameterized import parameterized
 
-from money import Money, Portfolio, MissingExchangeRateError
+from money import Bank, Money, Portfolio, MissingExchangeRateError
 
 
 class TestMoney(unittest.TestCase):
@@ -71,6 +71,11 @@ class TestMoney(unittest.TestCase):
         self.assertEqual("Money(5, 'USD')", str(five_dollars))
 
 class TestPortfolio(unittest.TestCase):
+    def setUp(self) -> None:
+        self.bank = Bank()
+        self.bank.add_exchange_rate("EUR", "USD", 1.2)
+        self.bank.add_exchange_rate("USD", "KRW", 1100)
+
     @parameterized.expand([
         ("same_currency_5_dollars_and_5_dollars_make_10_dollars", Money(5, "USD"), Money(5, "USD"), Money(10, "USD")),
         ("mixed_currency_5_dollars_and_10_euros_make_17_dollars", Money(5, "USD"), Money(10, "EUR"), Money(17, "USD")),
@@ -79,7 +84,7 @@ class TestPortfolio(unittest.TestCase):
     def test_addition(self, _, first: Money, second: Money, expected: Money):
         portfolio = Portfolio()
         portfolio.add(first, second)
-        actual_money= portfolio.evaluate(expected.currency)
+        actual_money= portfolio.evaluate(self.bank, expected.currency)
         self.assertEqual(expected, actual_money)
 
     def test_evaluate_should_fail_with_MissingExchangeRate_when_exchange_rates_are_missing(self):
@@ -88,5 +93,25 @@ class TestPortfolio(unittest.TestCase):
         one_won = Money(1, "KRW")
         portfolio = Portfolio()
         portfolio.add(one_dollar, one_euro, one_won)
-        with self.assertRaisesRegex(MissingExchangeRateError, "Missing exchange rate\(s\): \[USD>Kalganid,EUR>Kalganid,KRW>Kalganid\]"):
-            portfolio.evaluate("Kalganid")
+        with self.assertRaisesRegex(MissingExchangeRateError, r"Missing exchange rate\(s\): \[USD>Kalganid,EUR>Kalganid,KRW>Kalganid\]"):
+            portfolio.evaluate(self.bank, "Kalganid")
+
+
+class TestBank(unittest.TestCase):
+    
+    @parameterized.expand([
+        ("five_euros_should_convert_to_five_euros", Money(5, "EUR"), Money(5, "EUR")),
+        ("ten_euros_should_convert_to_twelve_dollars", Money(10, "EUR"), Money(12, "USD")),
+    ])
+    def test_successfull_conversion(self, _, from_money: Money, to_money: Money):
+        bank = Bank()
+        bank.add_exchange_rate("EUR", "USD", 1.2)
+        actual_money = bank.convert(from_money, to_money.currency)
+        self.assertEqual(to_money, actual_money)
+
+    def test_conversion_with_missing_rate(self):
+        bank = Bank()
+        from_money = Money(10, "EUR")
+        with self.assertRaisesRegex(MissingExchangeRateError, "EUR>Kalganid"):
+            bank.convert(from_money, "Kalganid")
+
