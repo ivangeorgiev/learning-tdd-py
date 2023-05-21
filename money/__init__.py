@@ -1,8 +1,10 @@
 from functools import reduce
 from operator import add, attrgetter
 
+
 class MissingExchangeRateError(Exception):
     pass
+
 
 class Money:
     def __init__(self, amount, currency):
@@ -22,6 +24,7 @@ class Money:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.amount}, '{self.currency}')"
+
 
 class Portfolio:
     def __init__(self):
@@ -47,6 +50,7 @@ class Portfolio:
             raise MissingExchangeRateError(msg)
         return amounts
 
+
 class Bank:
     def __init__(self):
         self._exchange_rates = {}
@@ -60,6 +64,5 @@ class Bank:
         exchange_key = f"{from_money.currency}>{to_currency}"
         if exchange_key in self._exchange_rates:
             rate = self._exchange_rates[exchange_key]
-            return Money(from_money.amount*rate, to_currency)
+            return Money(from_money.amount * rate, to_currency)
         raise MissingExchangeRateError(exchange_key)
-    
